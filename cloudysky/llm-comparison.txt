@@ -1,0 +1,13 @@
+In comparing robot-models.py to my own models.py, the two designs both implement
+the basic requirements for users, posts, comments, media, and suppression. However,
+they differ in structure and approach. robot-models.py extends Django’s built-in
+User model, using a separate UserType model to manage user roles, while my models.py
+defines a custom User model from scratch with its own fields. robot-models.py also
+includes an Avatar model for user bios and avatar uploads, which my version does
+not explicitly support. For media, my design introduces PostMedia and CommentMedia
+join tables to allow many-to-many attachments of media to posts and comments, while r
+obot-models.py uses simpler file upload fields tied directly to users. Both models handle
+post and comment suppression using an is_suppressed boolean and a suppression reason field.
+Overall, robot-models.py is more tightly integrated with Django’s authentication and media handling,
+while my design offers more flexible linking of media but would require more
+development to add authentication and user avatars.
