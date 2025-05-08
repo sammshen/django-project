@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed
 from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.urls import reverse
 from datetime import datetime
 
 # Create your views here.
@@ -9,7 +10,7 @@ def index(request):
     # Get current time
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Create context with time
+    # Create context with time and team members
     context = {
         'current_time': current_time,
         'team_members': [
@@ -33,6 +34,7 @@ def create_user(request):
 
     # Get form data
     user_name = request.POST.get('user_name')
+    last_name = request.POST.get('last_name')
     email = request.POST.get('email')
     password = request.POST.get('password')
     is_admin = request.POST.get('is_admin') == '1'
@@ -53,14 +55,20 @@ def create_user(request):
             password=password
         )
 
+        # Set last name if provided
+        if last_name:
+            user.last_name = last_name
+
         # Set user as staff if is_admin is True
         if is_admin:
             user.is_staff = True
-            user.save()
+
+        user.save()
 
         # Log the user in
         login(request, user)
 
-        return JsonResponse({'status': 'success', 'message': 'User created successfully'})
+        # Return success with 200 status code
+        return HttpResponse("User created successfully", status=200)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

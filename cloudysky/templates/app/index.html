@@ -14,6 +14,7 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
+            text-align: center;
         }
 
         .team-member {
@@ -54,11 +55,11 @@
 
         {% if user.is_authenticated %}
         <div class="username">
-            <p>Currently logged in as: <span class="highlight">{{ user.username }}</span></p>
+            <p>Currently logged in as: <span class="highlight">{{ user.username }}</span> ({{ user.email }})</p>
         </div>
         {% else %}
         <div class="username">
-            <p>You are not logged in. <a href="/login">Login</a> or <a href="/app/new">Sign Up</a></p>
+            <p>Not logged in. <a href="/accounts/login/">Login</a> or <a href="/app/new">Sign Up</a></p>
         </div>
         {% endif %}
 
