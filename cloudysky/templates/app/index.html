@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CloudySky Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .team-member {
+            margin-bottom: 15px;
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+            padding: 2px 5px;
+        }
+
+        .time-display {
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .username {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to CloudySky</h1>
+
+        <h2>Our Team</h2>
+        {% for member in team_members %}
+        <div class="team-member">
+            {% if user.is_authenticated and user.username == member.name %}
+            <p><span class="highlight">{{ member.name }}</span> - {{ member.bio }}</p>
+            {% else %}
+            <p>{{ member.name }} - {{ member.bio }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if user.is_authenticated %}
+        <div class="username">
+            <p>Currently logged in as: <span class="highlight">{{ user.username }}</span></p>
+        </div>
+        {% else %}
+        <div class="username">
+            <p>You are not logged in. <a href="/login">Login</a> or <a href="/app/new">Sign Up</a></p>
+        </div>
+        {% endif %}
+
+        <div class="time-display">
+            <p>Current time: {{ current_time }}</p>
+        </div>
+    </div>
+</body>
+
+</html>
