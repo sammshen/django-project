@@ -7,8 +7,8 @@ from datetime import datetime
 
 # Create your views here.
 def index(request):
-    # Get current time
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Get current time in HH:MM format
+    current_time = datetime.now().strftime("%H:%M")
 
     # Create context with time and team members
     context = {
