@@ -4,11 +4,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.urls import reverse
 from datetime import datetime
+import zoneinfo
 
 # Create your views here.
 def index(request):
-    # Get current time in HH:MM format
-    current_time = datetime.now().strftime("%H:%M")
+    # Get current time in HH:MM format using Chicago timezone
+    CDT = zoneinfo.ZoneInfo("America/Chicago")
+    current_time = datetime.now().astimezone(CDT).strftime("%H:%M")
 
     # Create context with time and team members
     context = {
