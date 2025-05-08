@@ -34,7 +34,7 @@ def create_user(request):
 
     # Get form data
     user_name = request.POST.get('user_name')
-    last_name = request.POST.get('last_name')
+    last_name = request.POST.get('last_name', '')
     email = request.POST.get('email')
     password = request.POST.get('password')
     is_admin = request.POST.get('is_admin') == '1'
@@ -55,9 +55,8 @@ def create_user(request):
             password=password
         )
 
-        # Set last name if provided
-        if last_name:
-            user.last_name = last_name
+        # Set last name
+        user.last_name = last_name
 
         # Set user as staff if is_admin is True
         if is_admin:

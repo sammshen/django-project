@@ -17,8 +17,9 @@
             text-align: center;
         }
 
-        .team-member {
-            margin-bottom: 15px;
+        .team-bio {
+            margin: 20px 0;
+            text-align: center;
         }
 
         .highlight {
@@ -30,10 +31,12 @@
         .time-display {
             margin-top: 20px;
             font-style: italic;
+            text-align: center;
         }
 
         .username {
             margin-top: 30px;
+            text-align: center;
         }
     </style>
 </head>
@@ -42,7 +45,12 @@
     <div class="container">
         <h1>Welcome to CloudySky</h1>
 
-        <h2>Our Team</h2>
+        <div class="team-bio">
+            <h2>Our Team</h2>
+            <p>This project was developed by Samuel Shen, a Mathematics and Computer Science student. The goal of this
+                application is to demonstrate Django's data flow capabilities from frontend to backend database.</p>
+        </div>
+
         {% for member in team_members %}
         <div class="team-member">
             {% if user.is_authenticated and user.username == member.name %}
