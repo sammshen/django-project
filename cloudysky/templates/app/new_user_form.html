@@ -36,6 +36,16 @@
             border-radius: 4px;
         }
 
+        .radio-group {
+            margin: 10px 0;
+        }
+
+        .radio-group label {
+            display: inline;
+            margin-right: 15px;
+            font-weight: normal;
+        }
+
         .btn {
             background-color: #4CAF50;
             color: white;
@@ -78,7 +88,15 @@
                 <input type="password" id="password" name="password" required>
             </div>
 
-            <input type="hidden" name="is_admin" value="0">
+            <div class="form-group">
+                <label>Admin Status:</label>
+                <div class="radio-group">
+                    <input type="radio" id="is_admin_yes" name="is_admin" value="1">
+                    <label for="is_admin_yes">Admin</label>
+                    <input type="radio" id="is_admin_no" name="is_admin" value="0" checked>
+                    <label for="is_admin_no">Regular User</label>
+                </div>
+            </div>
 
             <div class="form-group">
                 <button type="submit" class="btn">Sign Up</button>
