@@ -1,0 +1,34 @@
+{% extends "app/index.html" %}
+
+{% block title %}Create New Post - CloudySky{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create New Post</h3>
+                </div>
+                <div class="card-body">
+                    <form action="/app/createPost" method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="title">Title</label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                placeholder="Enter a title for your post" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="content">Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="6"
+                                placeholder="What would you like to share?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Post</button>
+                        <a href="/" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

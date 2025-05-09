@@ -1,2 +1,6 @@
 django
 pathlib
+pytest
+bs4
+gradescope_utils
+requests
