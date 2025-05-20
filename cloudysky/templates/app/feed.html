@@ -1,0 +1,113 @@
+{% extends "app/index.html" %}
+
+{% block title %}Feed - CloudySky{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>CloudySky Feed</h2>
+                <a href="{% url 'new_post' %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus-circle"></i> Create New Post
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="posts-container" class="mb-4">
+                <!-- Posts will be loaded here via JavaScript -->
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading posts...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch posts for the feed
+        fetch('/app/feed')
+            .then(response => response.json())
+            .then(data => {
+                const postsContainer = document.getElementById('posts-container');
+
+                if (data.posts.length === 0) {
+                    postsContainer.innerHTML = '<div class="alert alert-info">No posts yet. Be the first to create a post!</div>';
+                    return;
+                }
+
+                postsContainer.innerHTML = '';
+
+                data.posts.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.className = 'card mb-3';
+
+                    // Add a subtle background for suppressed posts
+                    if (post.is_suppressed) {
+                        postElement.classList.add('bg-light');
+                    }
+
+                    let postContent = `
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title">
+                                    <a href="/app/post_view/${post.id}" class="${post.is_suppressed ? 'text-muted' : ''}">
+                                        ${post.title}
+                                    </a>
+                                </h5>
+                                <small class="text-muted">${new Date(post.created_at).toLocaleDateString()}</small>
+                            </div>
+                            <p class="card-text ${post.is_suppressed ? 'text-muted' : ''}">${post.content_preview}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Posted by: ${post.username}</small>
+                                </div>
+                                <a href="/app/post_view/${post.id}" class="btn btn-sm btn-outline-primary">Read More</a>
+                            </div>
+                    `;
+
+                    // Add suppression notice if applicable
+                    if (post.is_suppressed) {
+                        if (post.suppression_reason) {
+                            postContent += `
+                                <div class="mt-2">
+                                    <div class="alert alert-warning">
+                                        <small>This post has been suppressed. Reason: ${post.suppression_reason}</small>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Add admin badge if in admin view
+                        if (post.admin_view) {
+                            postContent += `
+                                <div class="mt-2">
+                                    <span class="badge bg-danger">Admin View</span>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    postContent += `</div>`;
+                    postElement.innerHTML = postContent;
+                    postsContainer.appendChild(postElement);
+                });
+            })
+            .catch(error => {
+                const postsContainer = document.getElementById('posts-container');
+                postsContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading posts: ${error}
+                    </div>
+                `;
+            });
+    });
+</script>
+{% endblock %}

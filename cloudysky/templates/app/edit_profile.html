@@ -1,0 +1,172 @@
+{% extends "app/index.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Edit Your Profile</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Status alerts -->
+                    <div id="alert-success" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+                        Profile updated successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div id="alert-error" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                        Error updating profile. Please try again.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" id="profile-form">
+                        {% csrf_token %}
+
+                        <!-- Current Avatar Display -->
+                        <div class="form-group text-center mb-4">
+                            <label>Current Avatar</label>
+                            <div class="mt-2" id="avatar-container">
+                                {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" alt="{{ user.username }}'s avatar"
+                                    class="img-fluid rounded-circle" style="max-width: 150px; max-height: 150px;">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-danger" id="delete-avatar-btn">Remove
+                                        Avatar</button>
+                                    <input type="hidden" name="delete_avatar" id="delete-avatar" value="false">
+                                </div>
+                                {% else %}
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                                    style="width: 150px; height: 150px; font-size: 4rem;">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Avatar Upload -->
+                        <div class="form-group mb-3">
+                            <label for="avatar">Upload New Avatar</label>
+                            <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                            <small class="form-text text-muted">Upload a square image for best results. Maximum size:
+                                2MB.</small>
+                        </div>
+
+                        <!-- Bio -->
+                        <div class="form-group mb-3">
+                            <label for="bio">Bio</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="4"
+                                placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" id="submit-btn" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'user_profile' user.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Handle avatar deletion
+        const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+        const deleteAvatarInput = document.getElementById('delete-avatar');
+
+        if (deleteAvatarBtn) {
+            deleteAvatarBtn.addEventListener('click', function () {
+                if (confirm('Are you sure you want to remove your avatar?')) {
+                    deleteAvatarInput.value = 'true';
+                    // Show avatar placeholder instead
+                    const avatarContainer = document.getElementById('avatar-container');
+                    avatarContainer.innerHTML = `
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                            style="width: 150px; height: 150px; font-size: 4rem;">
+                            {{ user.username|first|upper }}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Form submission with AJAX
+        const profileForm = document.getElementById('profile-form');
+        profileForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Validate file size
+            const avatarInput = document.getElementById('avatar');
+            if (avatarInput.files.length > 0) {
+                const fileSize = avatarInput.files[0].size / 1024 / 1024; // size in MB
+                if (fileSize > 2) {
+                    alert('Avatar file size must be less than 2MB.');
+                    return;
+                }
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submit-btn');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            // Create form data from the form
+            const formData = new FormData(profileForm);
+
+            // Submit the form with AJAX
+            fetch('/app/user/profile/edit', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                    // Show success message
+                    document.getElementById('alert-success').classList.remove('d-none');
+
+                    // If a new file was uploaded, we might need to refresh to see it
+                    if (avatarInput.files.length > 0) {
+                        // Could optionally refresh the page after a delay
+                        // setTimeout(() => window.location.reload(), 2000);
+
+                        // Or show a message suggesting the user refresh to see changes
+                        document.getElementById('alert-success').innerHTML =
+                            'Profile updated successfully! Refresh the page to see avatar changes. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                    }
+
+                    // Reset file input
+                    avatarInput.value = '';
+                })
+                .catch(error => {
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                    // Show error message
+                    document.getElementById('alert-error').classList.remove('d-none');
+                    console.error('Error:', error);
+                });
+        });
+
+        // Hide alerts when close button is clicked
+        document.querySelectorAll('.alert .btn-close').forEach(button => {
+            button.addEventListener('click', function () {
+                this.parentElement.classList.add('d-none');
+            });
+        });
+    });
+</script>
+{% endblock %}

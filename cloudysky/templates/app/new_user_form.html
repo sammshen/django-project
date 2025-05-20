@@ -1,110 +1,153 @@
-<!DOCTYPE html>
-<html>
+{% extends "app/index.html" %}
 
-<head>
-    <title>Sign Up - CloudySky</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
+{% block title %}Sign Up - CloudySky{% endblock %}
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Sign Up</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Status alerts -->
+                    <div id="alert-success" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+                        Account created successfully! Redirecting...
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div id="alert-error" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                        <span id="error-message">Error creating account. Please try again.</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
 
-        .form-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
+                    <form action="/app/createUser" method="post" id="signup-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="referer" id="referer-url" value="">
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+                        <div class="mb-3">
+                            <label for="user_name" class="form-label">Username:</label>
+                            <input type="text" class="form-control" id="user_name" name="user_name" required>
+                        </div>
 
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last name:</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
 
-        .radio-group {
-            margin: 10px 0;
-        }
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address:</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
 
-        .radio-group label {
-            display: inline;
-            margin-right: 15px;
-            font-weight: normal;
-        }
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password:</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
 
-        .btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+                        <div class="mb-3">
+                            <label class="form-label">User Type:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="is_admin_yes" name="is_admin"
+                                    value="1">
+                                <label class="form-check-label" for="is_admin_yes">Admin</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="is_admin_no" name="is_admin" value="0"
+                                    checked>
+                                <label class="form-check-label" for="is_admin_no">Regular User</label>
+                            </div>
+                        </div>
 
-        .btn:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submit-btn" class="btn btn-success">Sign Up</button>
+                        </div>
+                    </form>
 
-<body>
-    <div class="container">
-        <h1>Sign Up</h1>
-        <form action="/app/createUser" method="post">
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label for="user_name">User Name:</label>
-                <input type="text" id="user_name" name="user_name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="last_name">Last name:</label>
-                <input type="text" id="last_name" name="last_name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email Address:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">A password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <div class="form-group">
-                <label>Admin Status:</label>
-                <div class="radio-group">
-                    <input type="radio" id="is_admin_yes" name="is_admin" value="1">
-                    <label for="is_admin_yes">Admin</label>
-                    <input type="radio" id="is_admin_no" name="is_admin" value="0" checked>
-                    <label for="is_admin_no">Regular User</label>
+                    <div class="mt-3 text-center">
+                        <p>Already have an account? <a href="/accounts/login/">Login</a></p>
+                    </div>
                 </div>
             </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn">Sign Up</button>
-            </div>
-        </form>
-
-        <p>Already have an account? <a href="/accounts/login/">Login</a></p>
+        </div>
     </div>
-</body>
+</div>
 
-</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Store the document referrer (previous page) in the hidden input
+        const referrerInput = document.getElementById('referer-url');
+        const referrer = document.referrer;
+
+        // Don't use login or signup pages as referrer
+        if (referrer && !referrer.includes('/accounts/login/') && !referrer.includes('/app/new')) {
+            referrerInput.value = referrer;
+        } else {
+            referrerInput.value = '/';
+        }
+
+        // Form submission with AJAX
+        const signupForm = document.getElementById('signup-form');
+        signupForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Show loading state
+            const submitBtn = document.getElementById('submit-btn');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating Account...';
+
+            // Create form data from the form
+            const formData = new FormData(signupForm);
+
+            // Submit the form with AJAX
+            fetch('/app/createUser', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Error creating account');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                    // Show success message
+                    document.getElementById('alert-success').classList.remove('d-none');
+
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = referrerInput.value;
+                    }, 1500);
+                })
+                .catch(error => {
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                    // Show error message
+                    const errorMessageElement = document.getElementById('error-message');
+                    errorMessageElement.textContent = error.message || 'Error creating account. Please try again.';
+                    document.getElementById('alert-error').classList.remove('d-none');
+                    console.error('Error:', error);
+                });
+        });
+
+        // Hide alerts when close button is clicked
+        document.querySelectorAll('.alert .btn-close').forEach(button => {
+            button.addEventListener('click', function () {
+                this.parentElement.classList.add('d-none');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "app/index.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- User Profile Section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" alt="{{ profile_user.username }}'s avatar"
+                        class="img-fluid rounded-circle mb-3" style="max-width: 150px; max-height: 150px;">
+                    {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                        style="width: 150px; height: 150px; font-size: 4rem;">
+                        {{ profile_user.username|first|upper }}
+                    </div>
+                    {% endif %}
+
+                    <h3>{{ profile_user.username }}</h3>
+                    <p class="text-muted">{{ profile_user.get_user_type_display }}</p>
+                    <p class="text-muted">Joined: {{ profile_user.created_at|date:"F j, Y" }}</p>
+
+                    {% if is_owner %}
+                    <a href="{% url 'edit_user_profile' %}" class="btn btn-primary">Edit Profile</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Bio Section -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>About</h5>
+                </div>
+                <div class="card-body">
+                    {% if profile.bio %}
+                    <p>{{ profile.bio }}</p>
+                    {% else %}
+                    <p class="text-muted">No bio available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- User Posts Section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Posts by {{ profile_user.username }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if posts %}
+                    <div class="list-group">
+                        {% for post in posts %}
+                        <div class="list-group-item {% if post.is_suppressed %}bg-light text-muted{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">
+                                    <a href="{% url 'api_post_detail' post.id %}"
+                                        class="{% if post.is_suppressed %}text-muted{% endif %}">
+                                        {{ post.title }}
+                                    </a>
+                                </h5>
+                                <small>{{ post.created_at|date:"F j, Y" }}</small>
+                            </div>
+                            <p class="mb-1">{{ post.text|truncatechars:100 }}</p>
+
+                            {% if post.is_suppressed %}
+                            <div class="alert alert-warning mt-2">
+                                <small>This post has been suppressed. Reason: {{ post.get_reason_suppressed_display
+                                    }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No posts yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "app/index.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Admin Dashboard</h2>
+
+    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button"
+                role="tab" aria-controls="users" aria-selected="true">User Management</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button"
+                role="tab" aria-controls="stats" aria-selected="false">User Statistics</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="adminTabsContent">
+        <!-- Users Tab -->
+        <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5>User Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>User Type</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {% if user.user_type == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                            {{ user.get_user_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.created_at|date:"F j, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'user_profile' user.id %}" class="btn btn-sm btn-info">View
+                                            Profile</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5>User Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="timeRangeFilter">
+                                <option value="day">Last 24 Hours</option>
+                                <option value="week">Last 7 Days</option>
+                                <option value="month" selected>Last 30 Days</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="statsTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Posts</th>
+                                    <th>Comments</th>
+                                    <th>Content Volume (bytes)</th>
+                                    <th>Suppressed Content</th>
+                                    <th>Suppression Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated via JavaScript -->
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading statistics...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch user statistics when the stats tab is shown
+        const statsTab = document.getElementById('stats-tab');
+        const timeRangeFilter = document.getElementById('timeRangeFilter');
+
+        // Load stats when tab is clicked
+        statsTab.addEventListener('click', function () {
+            loadUserStats();
+        });
+
+        // Load stats when time range changes
+        timeRangeFilter.addEventListener('change', function () {
+            loadUserStats();
+        });
+
+        // Function to load user statistics
+        function loadUserStats() {
+            const statsTable = document.getElementById('statsTable').getElementsByTagName('tbody')[0];
+            statsTable.innerHTML = '<tr><td colspan="6" class="text-center">Loading statistics...</td></tr>';
+
+            fetch('/app/admin/user/stats')
+                .then(response => response.json())
+                .then(data => {
+                    const timeRange = timeRangeFilter.value;
+                    const users = data.users;
+
+                    if (users.length === 0) {
+                        statsTable.innerHTML = '<tr><td colspan="6" class="text-center">No user data available</td></tr>';
+                        return;
+                    }
+
+                    statsTable.innerHTML = '';
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+
+                        // Posts and comments counts
+                        let posts, comments, postsVolume, commentsVolume;
+
+                        if (timeRange === 'day') {
+                            posts = user.posts.last_day;
+                            comments = user.comments.last_day;
+                            postsVolume = user.posts.volume_last_day;
+                            commentsVolume = user.comments.volume_last_day;
+                        } else if (timeRange === 'week') {
+                            posts = user.posts.last_week;
+                            comments = user.comments.last_week;
+                            postsVolume = user.posts.volume_last_week;
+                            commentsVolume = user.comments.volume_last_week;
+                        } else {
+                            posts = user.posts.last_month;
+                            comments = user.comments.last_month;
+                            postsVolume = user.posts.volume_last_month;
+                            commentsVolume = user.comments.volume_last_month;
+                        }
+
+                        const totalVolume = postsVolume + commentsVolume;
+                        const suppressedItems = user.posts.suppressed + user.comments.suppressed;
+                        const totalItems = user.posts.total + user.comments.total;
+                        const suppressionRate = totalItems > 0 ?
+                            ((suppressedItems / totalItems) * 100).toFixed(1) + '%' :
+                            '0%';
+
+                        row.innerHTML = `
+                            <td>${user.username}</td>
+                            <td>${posts}</td>
+                            <td>${comments}</td>
+                            <td>${totalVolume}</td>
+                            <td>${suppressedItems} / ${totalItems}</td>
+                            <td>${suppressionRate}</td>
+                        `;
+
+                        statsTable.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    statsTable.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error loading data: ${error}</td></tr>`;
+                });
+        }
+    });
+</script>
+{% endblock %}

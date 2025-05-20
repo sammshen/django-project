@@ -1,0 +1,37 @@
+I first solved PUZZLE-EASY using brute force (solve_easy_puzzle.py).
+
+1. First figured out that "6346" was the key (most matches).
+Find the key that decodes the most common words (promising).
+
+2. Then used it to decode as much of the message as I could with common words.
+Then use that key to decode the entire message.
+
+3. Finally, I searched on the internet to finish Tony Morrison's Song of Solomon (thanks Google Vector Search Engine!)
+
+Message:
+"
+The North Carolina Mutual Life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock. Two days before the event was to take place he tacked a note on the door of his little yellow house:
+
+
+At 3:00 p.m. on Wednesday the 18th of February, 1931, I will take off from Mercy and fly away on my own wings. Please forgive me. I loved you all.
+(signed) Robert Smith,
+Ins. agent
+"
+I then adapted this same strategy to the PUZZLE
+
+For this one, I found the key by just looking for the word "the".
+
+This found the key:
+"485066843"
+
+This yielded:
+[0] little [2] were [4] out [6] in [8] tall [10] [11] moon [13] not quite [16] but [18] [19] [20] [21] behind [23] so [25] could see them [29] plain as [32] though [34] [35] deep [37] [38] [39] [40] against [42] black [44] [45] [46] [47] [48] [49] kitchen [51] [52] [53] loose step board [57] [58] [59] knew [61] [62] going [64] tell [66] [67] fix [69] [70] [71] was [73] there [75] her [77] give me [80] pan [82] corn bread that she had made with my [91] [92] [93] is [95] big part [98] a [100] [101] [102] [103] waiting to wait some [108] [109] [110] [111] [112] [113] [114] [115] [116] [117] [118] [119] [120] [121] for [123] just [125] deserved [127] reward at the end of it [134] [135] white [137] [138] and [140] watched [142]
+
+Then the internet (Google Search) gave:
+Those little bastards were hiding out there in the tall grass. The moon was not quite full, but bright, and it was behind them, so I could see them as plain as day, though it was deep night. Lightning bugs flashed against the black canvas. I waited at Miss Watson’s kitchen door, rocked a loose step board with my foot, knew she was going to tell me to fix it tomorrow. I was waiting there for her to give me a pan of corn bread that she had made with my Sadie’s recipe. Waiting is a big part of a slave’s life, waiting and waiting to wait some more. Waiting for demands. Waiting for food. Waiting for the ends of days. Waiting for the just and deserved Christian reward at the end of it all. Those white boys, Huck and Tom, watched me.
+
+Then I hashed the correct message with the key and figured out where there was a mismatch.
+
+"Waiting" produced a hash mismatch.
+
+Using slight edit distances, we foubd "wkitpng"

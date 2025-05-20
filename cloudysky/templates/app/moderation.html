@@ -1,0 +1,354 @@
+{% extends "app/index.html" %}
+
+{% block title %}Content Moderation - CloudySky{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Content Moderation</h2>
+
+    <ul class="nav nav-tabs" id="moderationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button"
+                role="tab" aria-controls="posts" aria-selected="true">Posts</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button"
+                role="tab" aria-controls="comments" aria-selected="false">Comments</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="moderationTabsContent">
+        <!-- Posts Tab -->
+        <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Manage Posts</h5>
+                        <div>
+                            <select class="form-select form-select-sm" id="postsFilter">
+                                <option value="all">All Posts</option>
+                                <option value="active">Active Posts</option>
+                                <option value="suppressed">Suppressed Posts</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="posts-container">
+                        <!-- Posts will be loaded here via JavaScript -->
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading posts...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Tab -->
+        <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Manage Comments</h5>
+                        <div>
+                            <select class="form-select form-select-sm" id="commentsFilter">
+                                <option value="all">All Comments</option>
+                                <option value="active">Active Comments</option>
+                                <option value="suppressed">Suppressed Comments</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="comments-container">
+                        <!-- Comments will be loaded here via JavaScript -->
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading comments...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moderation Modal -->
+    <div class="modal fade" id="moderationModal" tabindex="-1" aria-labelledby="moderationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="moderationModalLabel">Remove Content</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="moderationForm">
+                        <input type="hidden" id="contentId" name="contentId">
+                        <input type="hidden" id="contentType" name="contentType">
+
+                        <div class="mb-3">
+                            <label for="moderationReason" class="form-label">Reason for Removal</label>
+                            <select class="form-select" id="moderationReason" name="reason" required>
+                                <option value="offensive">Offensive Content</option>
+                                <option value="spam">Spam</option>
+                                <option value="misinformation">Misinformation</option>
+                                <option value="hate_speech">Hate Speech</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="privacy">Privacy Violation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div id="contentPreview" class="alert alert-secondary mt-3">
+                            <!-- Content preview will be shown here -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmModeration">Remove Content</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const postsContainer = document.getElementById('posts-container');
+        const commentsContainer = document.getElementById('comments-container');
+        const postsFilter = document.getElementById('postsFilter');
+        const commentsFilter = document.getElementById('commentsFilter');
+
+        // Load posts when the page loads
+        loadPosts('all');
+
+        // Filter change events
+        postsFilter.addEventListener('change', function () {
+            loadPosts(this.value);
+        });
+
+        commentsFilter.addEventListener('change', function () {
+            loadComments(this.value);
+        });
+
+        // Tab change events
+        document.getElementById('comments-tab').addEventListener('click', function () {
+            if (commentsContainer.innerHTML.includes('Loading')) {
+                loadComments('all');
+            }
+        });
+
+        // Moderation modal handling
+        const moderationModal = new bootstrap.Modal(document.getElementById('moderationModal'));
+        const contentIdInput = document.getElementById('contentId');
+        const contentTypeInput = document.getElementById('contentType');
+        const contentPreview = document.getElementById('contentPreview');
+        const confirmModerationBtn = document.getElementById('confirmModeration');
+
+        confirmModerationBtn.addEventListener('click', function () {
+            const contentId = contentIdInput.value;
+            const contentType = contentTypeInput.value;
+            const reason = document.getElementById('moderationReason').value;
+
+            if (contentType === 'post') {
+                hidePost(contentId, reason);
+            } else if (contentType === 'comment') {
+                hideComment(contentId, reason);
+            }
+
+            moderationModal.hide();
+        });
+
+        // Function to load posts
+        function loadPosts(filter) {
+            postsContainer.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading posts...</p>
+                </div>
+            `;
+
+            fetch('/app/feed')
+                .then(response => response.json())
+                .then(data => {
+                    const posts = data.posts;
+
+                    if (posts.length === 0) {
+                        postsContainer.innerHTML = '<div class="alert alert-info">No posts found.</div>';
+                        return;
+                    }
+
+                    // Filter posts
+                    let filteredPosts = posts;
+                    if (filter === 'active') {
+                        filteredPosts = posts.filter(post => !post.is_suppressed);
+                    } else if (filter === 'suppressed') {
+                        filteredPosts = posts.filter(post => post.is_suppressed);
+                    }
+
+                    if (filteredPosts.length === 0) {
+                        postsContainer.innerHTML = '<div class="alert alert-info">No posts match the current filter.</div>';
+                        return;
+                    }
+
+                    postsContainer.innerHTML = '';
+
+                    // Create table
+                    const table = document.createElement('table');
+                    table.className = 'table table-hover';
+
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    `;
+
+                    const tbody = table.querySelector('tbody');
+
+                    filteredPosts.forEach(post => {
+                        const row = document.createElement('tr');
+                        if (post.is_suppressed) {
+                            row.classList.add('table-light', 'text-muted');
+                        }
+
+                        row.innerHTML = `
+                            <td>${post.id}</td>
+                            <td>
+                                <a href="/app/post/${post.id}" class="${post.is_suppressed ? 'text-muted' : ''}">
+                                    ${post.title}
+                                </a>
+                            </td>
+                            <td>${post.username}</td>
+                            <td>${new Date(post.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <span class="badge ${post.is_suppressed ? 'bg-danger' : 'bg-success'}">
+                                    ${post.is_suppressed ? 'Suppressed' : 'Active'}
+                                </span>
+                                ${post.suppression_reason ? `<small class="d-block mt-1">${post.suppression_reason}</small>` : ''}
+                            </td>
+                            <td>
+                                <a href="/app/post/${post.id}" class="btn btn-sm btn-info">View</a>
+                                ${!post.is_suppressed ? `
+                                    <button class="btn btn-sm btn-danger ms-1 moderate-btn"
+                                            data-id="${post.id}"
+                                            data-type="post"
+                                            data-content="${post.content_preview}">
+                                        Remove
+                                    </button>
+                                ` : ''}
+                            </td>
+                        `;
+
+                        tbody.appendChild(row);
+                    });
+
+                    postsContainer.appendChild(table);
+
+                    // Add event listeners to moderation buttons
+                    document.querySelectorAll('.moderate-btn').forEach(button => {
+                        button.addEventListener('click', openModerationModal);
+                    });
+                })
+                .catch(error => {
+                    postsContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error loading posts: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        // Function to load comments
+        function loadComments(filter) {
+            commentsContainer.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading comments...</p>
+                </div>
+            `;
+
+            // This would need a separate API endpoint to fetch all comments
+            // For now, we'll use a placeholder
+            commentsContainer.innerHTML = '<div class="alert alert-info">Comment moderation requires an additional API endpoint to list all comments.</div>';
+        }
+
+        // Function to open moderation modal
+        function openModerationModal() {
+            const contentId = this.dataset.id;
+            const contentType = this.dataset.type;
+            const content = this.dataset.content;
+
+            contentIdInput.value = contentId;
+            contentTypeInput.value = contentType;
+            contentPreview.textContent = content;
+
+            document.getElementById('moderationModalLabel').textContent =
+                contentType === 'post' ? 'Remove Post' : 'Remove Comment';
+
+            moderationModal.show();
+        }
+
+        // Function to hide a post
+        function hidePost(postId, reason) {
+            const formData = new FormData();
+            formData.append('post_id', postId);
+            formData.append('reason', reason);
+
+            fetch('/app/hidePost', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to hide post');
+                    }
+                    // Reload posts list
+                    loadPosts(postsFilter.value);
+                })
+                .catch(error => {
+                    alert('Error hiding post: ' + error.message);
+                });
+        }
+
+        // Function to hide a comment
+        function hideComment(commentId, reason) {
+            const formData = new FormData();
+            formData.append('comment_id', commentId);
+            formData.append('reason', reason);
+
+            fetch('/app/hideComment', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to hide comment');
+                    }
+                    // Reload comments list
+                    loadComments(commentsFilter.value);
+                })
+                .catch(error => {
+                    alert('Error hiding comment: ' + error.message);
+                });
+        }
+    });
+</script>
+{% endblock %}

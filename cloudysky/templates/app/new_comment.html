@@ -14,17 +14,25 @@
                     <form action="/app/createComment" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="post_id" value="{{ post_id }}">
+                        <input type="hidden" name="referer" id="referer-url" value="">
                         <div class="form-group mb-3">
                             <label for="content">Your Comment</label>
                             <textarea class="form-control" id="content" name="content" rows="4"
                                 placeholder="Share your thoughts..." required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-info">Submit Comment</button>
-                        <a href="/" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">Submit Comment</button>
+                        <a href="{% url 'post_view' post_id %}" class="btn btn-secondary">Cancel</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const referrerInput = document.getElementById('referer-url');
+        referrerInput.value = document.referrer || '/app/post_view/{{ post_id }}';
+    });
+</script>
 {% endblock %}
