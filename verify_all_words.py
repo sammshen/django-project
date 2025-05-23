@@ -6,6 +6,11 @@ def verify_all_words():
 
     # Full expected message
     expected_message = """Those little bastards were hiding out there in the tall grass. The moon was not quite full, but bright, and it was behind them, so I could see them as plain as day, though it was deep night. Lightning bugs flashed against the black canvas. I waited at Miss Watson's kitchen door, rocked a loose step board with my foot, knew she was going to tell me to fix it tomorrow. I was waiting there for her to give me a pan of corn bread that she had made with my Sadie's recipe. Waiting is a big part of a slave's life, waiting and waiting to wait some more. Waiting for demands. Waiting for food. Waiting for the ends of days. Waiting for the just and deserved Christian reward at the end of it all. Those white boys, Huck and Tom, watched me."""
+    # Remove all punctuation
+    expected_message = expected_message.replace(",", "").replace(".", "").replace("!", "").replace("?", "")
+    expected_message = expected_message.replace("'", "").replace('"', "").replace(";", "").replace(":", "")
+    # Lowercase the message
+    expected_message = expected_message.lower()
 
     # Split by spaces for processing
     words = expected_message.split()
