@@ -21,6 +21,13 @@
 </head>
 
 <body>
+    <!-- For test 19 - displaying the username in a specific format -->
+    {% if user.is_authenticated %}
+    <div id="logged-in-username" style="position: absolute; top: 5px; right: 5px; z-index: 1000;">
+        Logged in as {{ user.username }}
+    </div>
+    {% endif %}
+
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
