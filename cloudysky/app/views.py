@@ -341,16 +341,18 @@ def hide_post(request):
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
     # Get the current user
-    user = None
     try:
-        if request.user.is_authenticated:
-            user = User.objects.get(username=request.user.username)
+        user = User.objects.get(username=request.user.username)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 
     # Only admins can suppress posts
-    if not user or not user.is_admin():
+    if not user.is_admin():
         return HttpResponseForbidden("Unauthorized")
 
     # Get the post ID from request
@@ -389,16 +391,18 @@ def hide_comment(request):
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
     # Get the current user
-    user = None
     try:
-        if request.user.is_authenticated:
-            user = User.objects.get(username=request.user.username)
+        user = User.objects.get(username=request.user.username)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 
     # Only admins can suppress comments
-    if not user or not user.is_admin():
+    if not user.is_admin():
         return HttpResponseForbidden("Unauthorized")
 
     # Get the comment ID from request
@@ -872,15 +876,20 @@ def feed_view(request):
 
     # Get the current user's ID for navigation
     user_id = None
+    username = None
     if request.user.is_authenticated:
         try:
             user = User.objects.get(username=request.user.username)
             user_id = user.id
+            username = user.username
         except User.DoesNotExist:
+            # Use Django user if custom user not found
+            username = request.user.username
             pass
 
     context = {
         'user_id': user_id,
+        'username': username,
         'current_time': current_time,
         'team_members': [
             {'name': 'Samuel Shen', 'bio': 'Mathematics and Computer Science Student'}
